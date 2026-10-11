@@ -1,13 +1,13 @@
-import type { NextRequest } from "next/server";
-import { successResponse, errorResponse } from "@/lib/api/response";
 import { requireAdmin } from "@/lib/api/auth";
+import { handleApiError, zodDetails } from "@/lib/api/error";
+import { errorResponse, successResponse } from "@/lib/api/response";
 import { updateCategorySchema } from "@/schemas/category.schema";
 import {
+  deleteCategory,
   getCategoryById,
   updateCategory,
-  deleteCategory,
 } from "@/services/category.service";
-import { zodDetails, handleApiError } from "@/lib/api/error";
+import type { NextRequest } from "next/server";
 
 // GET /api/categories/:id
 export async function GET(
