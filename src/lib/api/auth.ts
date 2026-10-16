@@ -17,3 +17,13 @@ export async function requireAdmin() {
   if (user.role !== "admin") throw forbidden();
   return user;
 }
+
+// ❌ DELETE — no longer used anywhere
+export async function getOptionalUser() {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    return session?.user ?? null;
+  } catch {
+    return null;
+  }
+}
