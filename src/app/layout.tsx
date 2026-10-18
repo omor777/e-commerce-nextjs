@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import TanStackProvider  from "@/providers/tanstack-provider";
 
 // ─── Fonts ───────────────────────────────────────────
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
@@ -43,9 +44,11 @@ export default function RootLayout({
       )}
     >
       <body className="font-sans antialiased">
-        <SiteHeader />
-        <main>{children}</main>
-        <Toaster richColors  />
+        <TanStackProvider>
+          <SiteHeader />
+          <main>{children}</main>
+          <Toaster richColors position="bottom-right" />
+        </TanStackProvider>
       </body>
     </html>
   );

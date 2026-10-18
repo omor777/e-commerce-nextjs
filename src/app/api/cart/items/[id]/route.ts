@@ -58,17 +58,9 @@ export async function DELETE(
   ctx: RouteContext<"/api/cart/items/[id]">,
 ) {
   try {
-    let userId: string | null = null;
-    try {
-      const user = await requireAuth();
-      userId = user.id;
-    } catch {
-      userId = null;
-    }
-
     const { id } = await ctx.params;
 
-    const cart = await resolveCart(userId, false);
+    const cart = await resolveCart(false);
     if (!cart) {
       return errorResponse("NOT_FOUND", "Cart not found.", 404);
     }

@@ -11,7 +11,6 @@ import type {
   UpdateVariantInput,
 } from "@/schemas/product.schema";
 
-
 /*
 TODO: Read later this doc
 The price-sort trade-off (important)
@@ -89,12 +88,10 @@ Pagination with price sort
 Total count is correct even though sorting is in memory.
 */
 
+// 🔄 CHANGED: listProducts now attaches cheapestPrice to each product.
 export async function listProducts(query: ListProductsQuery) {
   const { skip, take } = toPrismaPagination(query);
 
-  // ─── NEW ─────────────────────────────────────────
-  // Price filters translate into a variant-level `some`
-  // clause: products with AT LEAST ONE variant in range.
   const priceFilter =
     query.minPrice !== undefined || query.maxPrice !== undefined
       ? {
@@ -111,7 +108,6 @@ export async function listProducts(query: ListProductsQuery) {
           },
         }
       : {};
-  // ─── END NEW ─────────────────────────────────────
 
   const where = {
     ...(query.categoryId ? { categoryId: query.categoryId } : {}),
@@ -119,61 +115,73 @@ export async function listProducts(query: ListProductsQuery) {
     ...(query.search
       ? { name: { contains: query.search, mode: "insensitive" as const } }
       : {}),
-    // ─── NEW ───────────────────────────────────────
     ...priceFilter,
-    // ─── END NEW ───────────────────────────────────
   };
 
-  // ─── NEW ─────────────────────────────────────────
-  // Sort by price needs a different strategy. Fetch
-  // matching products with their cheapest variant, then
-  // sort in memory. See note below.
   const sort = query.sort;
   const isPriceSort = sort === "price_asc" || sort === "price_desc";
+
+  // ─── NEW ─────────────────────────────────────────
+  // Every query selects the cheapest active variant so the
+  // response can include a `cheapestPrice` field. This is what
+  // the product card uses.
+  const variantPriceSelect = {
+    where: { isActive: true },
+    select: { price: true },
+    orderBy: { price: "asc" as const },
+    take: 1,
+  };
+  // ─── END NEW ─────────────────────────────────────
 
   if (isPriceSort) {
     const all = await prisma.product.findMany({
       where,
       include: {
         category: true,
-        variants: {
-          where: { isActive: true },
-          select: { price: true },
-          orderBy: { price: "asc" },
-          take: 1,
-        },
+        variants: variantPriceSelect, // 🔄 CHANGED: shared select
       },
     });
 
-    const withPrice = all.map((p) => ({
-      product: p,
-      cheapest: p.variants[0]?.price,
+    // ─── NEW ───────────────────────────────────────
+    // Attach cheapestPrice to each product before sorting.
+    const enriched = all.map((p) => ({
+      ...p,
+      cheapestPrice: p.variants[0]?.price ?? null,
     }));
 
-    withPrice.sort((a, b) => {
-      // Products with no active variant go last.
-      if (a.cheapest === undefined) return 1;
-      if (b.cheapest === undefined) return -1;
-      const diff = Number(a.cheapest) - Number(b.cheapest);
+    enriched.sort((a, b) => {
+      if (a.cheapestPrice === null) return 1;
+      if (b.cheapestPrice === null) return -1;
+      const diff = Number(a.cheapestPrice) - Number(b.cheapestPrice);
       return sort === "price_asc" ? diff : -diff;
     });
 
-    const total = withPrice.length;
-    const paged = withPrice.slice(skip, skip + take).map((x) => x.product);
+    const total = enriched.length;
+    const paged = enriched.slice(skip, skip + take);
     return { items: paged, meta: buildMeta(query, total) };
+    // ─── END NEW ───────────────────────────────────
   }
-  // ─── END NEW ─────────────────────────────────────
 
-  const [items, total] = await Promise.all([
+  const [rows, total] = await Promise.all([
     prisma.product.findMany({
       where,
       skip,
       take,
-      orderBy: getOrderBy(sort), // 🔄 CHANGED: was `{ createdAt: "desc" }`
-      include: { category: true },
+      orderBy: getOrderBy(sort),
+      include: {
+        category: true,
+        variants: variantPriceSelect, // 🔄 CHANGED: shared select
+      },
     }),
     prisma.product.count({ where }),
   ]);
+
+  // ─── NEW ─────────────────────────────────────────
+  const items = rows.map((p) => ({
+    ...p,
+    cheapestPrice: p.variants[0]?.price ?? null,
+  }));
+  // ─── END NEW ─────────────────────────────────────
 
   return { items, meta: buildMeta(query, total) };
 }
@@ -342,6 +350,39 @@ export async function deleteVariant(id: string) {
   if (!existing) throw notFound("Variant not found.");
   await prisma.productVariant.delete({ where: { id } });
 }
+
+// ─── NEW ───────────────────────────────────────────
+const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
+
+export async function getProductVariants(productId: string) {
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { id: true },
+  });
+  if (!product) throw notFound("Product not found.");
+
+  // 🔄 CHANGED: fetch without orderBy, sort in memory
+  const variants = await prisma.productVariant.findMany({
+    where: { productId },
+  });
+
+  // Sort sizes custom, then color alphabetical
+  return variants.sort((a, b) => {
+    const sizeA = SIZE_ORDER.indexOf(a.size.toUpperCase());
+    const sizeB = SIZE_ORDER.indexOf(b.size.toUpperCase());
+
+    // If size is not in the array, put it at the end
+    const weightA = sizeA === -1 ? 999 : sizeA;
+    const weightB = sizeB === -1 ? 999 : sizeB;
+
+    if (weightA !== weightB) {
+      return weightA - weightB;
+    }
+
+    return a.color.localeCompare(b.color);
+  });
+}
+// ───────────────────────────────────────────────────
 
 // ─── NEW ─────────────────────────────────────────────
 // Maps the API sort values to Prisma orderBy clauses.

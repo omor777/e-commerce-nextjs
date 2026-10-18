@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "**" }, // 🔄 CHANGED: allow all https hosts — tighten later
+    ],
+  },
 };
 
 export default nextConfig;

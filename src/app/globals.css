@@ -4,7 +4,9 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* 🔄 CHANGED: Merged the two @theme inline blocks into one */
 @theme inline {
+  /* Your existing shadcn mappings */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);

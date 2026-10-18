@@ -3,11 +3,20 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth-client";
+import { useQuery } from "@tanstack/react-query";
+import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cartQueryOptions } from "@/lib/api/cart";
+import { CartDrawer } from "./cart-drawer";
 
 export function SiteHeader() {
   const router = useRouter();
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending: isSessionLoading } = useSession();
+
+  // Fetch cart to show badge count
+  const { data: cartRes } = useQuery(cartQueryOptions());
+  const cartItemCount =
+    cartRes?.data?.items.reduce((total, item) => total + item.quantity, 0) ?? 0;
 
   async function handleSignOut() {
     await signOut();
@@ -39,9 +48,22 @@ export function SiteHeader() {
           </Link>
         </nav>
 
-        {/* Auth area */}
-        <div className="flex items-center gap-3">
-          {isPending ? (
+        {/* Actions */}
+        <div className="flex items-center gap-4">
+          {/* Cart Drawer & Badge */}
+          <CartDrawer>
+            <Button variant="ghost" size="icon" className="relative">
+              <ShoppingCart className="size-5" />
+              {cartItemCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                  {cartItemCount}
+                </span>
+              )}
+            </Button>
+          </CartDrawer>
+
+          {/* Auth */}
+          {isSessionLoading ? (
             <span className="text-sm text-muted-foreground">…</span>
           ) : session ? (
             <>
