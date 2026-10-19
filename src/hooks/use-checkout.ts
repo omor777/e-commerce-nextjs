@@ -23,14 +23,18 @@ export function useCheckout() {
   return useMutation({
     mutationFn: async (payload: CheckoutPayload) => {
       const { data } = await api.post("/checkout", payload);
-      return data;
+      return data; // Returns { success: true, data: { id: "...", orderNumber: "..." } }
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
       toast.success("Order placed successfully!");
-      // Clear the cart cache so the header badge updates
       queryClient.invalidateQueries({ queryKey: cartQueryOptions().queryKey });
-      // Redirect to success page
-      router.push("/checkout/success");
+
+      // 🔄 CHANGED: Redirect with the order ID
+      if (res.success && res.data?.id) {
+        router.push(`/checkout/success?orderId=${res.data.id}`);
+      } else {
+        router.push("/checkout/success");
+      }
     },
     onError: (err: any) => {
       const message =
