@@ -382,6 +382,22 @@ export async function getProductVariants(productId: string) {
     return a.color.localeCompare(b.color);
   });
 }
+
+export async function getProductBySlug(slug: string) {
+  const product = await prisma.product.findUnique({
+    where: { slug },
+    include: {
+      category: true,
+      variants: {
+        where: { isActive: true },
+        orderBy: { price: "asc" },
+      },
+    },
+  });
+  if (!product) throw notFound("Product not found.");
+  return product;
+}
+
 // ───────────────────────────────────────────────────
 
 // ─── NEW ─────────────────────────────────────────────

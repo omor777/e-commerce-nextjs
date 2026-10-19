@@ -1,15 +1,13 @@
-import type { NextRequest } from "next/server";
-import { successResponse, errorResponse } from "@/lib/api/response";
-import { getOptionalUser } from "@/lib/api/auth";
+import { handleApiError, zodDetails } from "@/lib/api/error";
+import { errorResponse, successResponse } from "@/lib/api/response";
 import { resolveCart } from "@/lib/cart";
 import { checkoutSchema } from "@/schemas/checkout.schema";
 import { checkout } from "@/services/checkout.service";
-import { zodDetails, handleApiError } from "@/lib/api/error";
+import type { NextRequest } from "next/server";
 
 // POST /api/checkout
 export async function POST(req: NextRequest) {
   try {
-    const user = await getOptionalUser();
     const body = await req.json();
 
     const parsed = checkoutSchema.safeParse(body);
@@ -24,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     // Resolve the cart for this user or guest. create: false —
     // you can't checkout a cart that doesn't exist.
-    const cart = await resolveCart(user?.id ?? null, false);
+    const cart = await resolveCart(false);
     if (!cart) {
       return errorResponse("NOT_FOUND", "Cart not found.", 404);
     }

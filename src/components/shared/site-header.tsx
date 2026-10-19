@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSession, signOut } from "@/lib/auth-client";
-import { useQuery } from "@tanstack/react-query";
-import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cartQueryOptions } from "@/lib/api/cart";
+import { signOut, useSession } from "@/lib/auth-client";
+import { useQuery } from "@tanstack/react-query";
+import { ShoppingCart } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CartDrawer } from "./cart-drawer";
 
 export function SiteHeader() {
@@ -45,6 +45,12 @@ export function SiteHeader() {
             className="text-muted-foreground hover:text-foreground"
           >
             Cart
+          </Link>
+          <Link
+            href="/checkout"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            checkout
           </Link>
         </nav>
 
