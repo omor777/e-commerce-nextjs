@@ -2,7 +2,7 @@ import { requireAdmin } from "@/lib/api/auth";
 import { handleApiError, zodDetails } from "@/lib/api/error";
 import { errorResponse, successResponse } from "@/lib/api/response";
 import { createVariantSchema } from "@/schemas/product.schema";
-import { createVariant, getProductVariants } from "@/services/product.service";
+import { getProductVariants } from "@/services/product.service";
 import type { NextRequest } from "next/server";
 
 // POST /api/products/:id/variants  (admin only)
@@ -25,20 +25,18 @@ export async function POST(
       );
     }
 
-    const variant = await createVariant(id, parsed.data);
-    return successResponse(variant);
+    // const variant = await createVariant(id, parsed.data);
+    return successResponse("api/products/:id/variants");
   } catch (err) {
     return handleApiError(err, "POST /api/products/[id]/variants");
   }
 }
 
-
-
 // ─── NEW ───────────────────────────────────────────
 // GET /api/products/:id/variants
 export async function GET(
   _req: NextRequest,
-  ctx: RouteContext<"/api/products/[id]/variants">
+  ctx: RouteContext<"/api/products/[id]/variants">,
 ) {
   try {
     const { id } = await ctx.params;

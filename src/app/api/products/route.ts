@@ -1,12 +1,12 @@
-import type { NextRequest } from "next/server";
-import { successResponse, errorResponse } from "@/lib/api/response";
 import { requireAdmin } from "@/lib/api/auth";
+import { handleApiError, zodDetails } from "@/lib/api/error";
+import { errorResponse, successResponse } from "@/lib/api/response";
 import {
   createProductSchema,
   listProductsQuerySchema,
 } from "@/schemas/product.schema";
-import { listProducts, createProduct } from "@/services/product.service";
-import { zodDetails, handleApiError } from "@/lib/api/error";
+import { createProduct, listProducts } from "@/services/product.service";
+import type { NextRequest } from "next/server";
 
 // GET /api/products?page=&limit=&categoryId=&isActive=&search=
 export async function GET(req: NextRequest) {
@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const parsed = createProductSchema.safeParse(body);
+
     if (!parsed.success) {
       return errorResponse(
         "VALIDATION_ERROR",

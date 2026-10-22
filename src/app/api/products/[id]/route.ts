@@ -1,23 +1,23 @@
-import type { NextRequest } from "next/server";
-import { errorResponse, successResponse } from "@/lib/api/response";
 import { requireAdmin } from "@/lib/api/auth";
+import { handleApiError, zodDetails } from "@/lib/api/error";
+import { errorResponse, successResponse } from "@/lib/api/response";
 import { updateProductSchema } from "@/schemas/product.schema";
 import {
+  deleteProduct,
   getProductBySlug, // 👈 Using the slug service directly
   updateProduct,
-  deleteProduct,
 } from "@/services/product.service";
-import { zodDetails, handleApiError } from "@/lib/api/error";
+import type { NextRequest } from "next/server";
 
 // GET /api/products/:slug
 export async function GET(
   _req: NextRequest,
-  ctx: RouteContext<"/api/products/[slug]">,
+  ctx: RouteContext<"/api/products/[id]">,
 ) {
   try {
-    const { slug } = await ctx.params;
+    const { id } = await ctx.params;
     // 🔄 CHANGED: Strictly fetch by slug
-    const product = await getProductBySlug(slug);
+    const product = await getProductBySlug(id);
     return successResponse(product);
   } catch (err) {
     return handleApiError(err, "GET /api/products/[slug]");
@@ -27,18 +27,12 @@ export async function GET(
 // PATCH /api/products/:slug
 export async function PATCH(
   req: NextRequest,
-  ctx: RouteContext<"/api/products/[slug]">,
+  ctx: RouteContext<"/api/products/[id]">,
 ) {
   try {
     await requireAdmin();
-    const { slug } = await ctx.params;
-
-    // Note: For PATCH/DELETE, you usually need the ID.
-    // If your service functions (updateProduct/deleteProduct) strictly require an ID,
-    // you'll need to fetch the product first to get its ID, OR update your service functions to accept the slug.
-    // Assuming your services can handle a slug lookup internally or you fetch it here:
-
-    const product = await getProductBySlug(slug);
+    const { id } = await ctx.params;
+    // const product = await getProductBySlug(slug);
 
     const body = await req.json();
     const parsed = updateProductSchema.safeParse(body);
@@ -52,25 +46,23 @@ export async function PATCH(
     }
 
     // If updateProduct requires an ID, pass product.id
-    const updated = await updateProduct(product.id, parsed.data);
+    const updated = await updateProduct(id, parsed.data);
     return successResponse(updated);
   } catch (err) {
     return handleApiError(err, "PATCH /api/products/[slug]");
   }
 }
 
-// DELETE /api/products/:slug
 export async function DELETE(
   _req: NextRequest,
-  ctx: RouteContext<"/api/products/[slug]">,
+  ctx: RouteContext<"/api/products/[id]">,
 ) {
   try {
     await requireAdmin();
-    const { slug } = await ctx.params;
+    const { id } = await ctx.params;
 
-    const product = await getProductBySlug(slug);
-    await deleteProduct(product.id);
-    return successResponse({ id: product.id });
+    const { id: deleteProductId } = await deleteProduct(id);
+    return successResponse({ id: deleteProductId });
   } catch (err) {
     return handleApiError(err, "DELETE /api/products/[slug]");
   }

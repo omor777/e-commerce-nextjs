@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cartQueryOptions } from "@/lib/api/cart";
 import { signOut, useSession } from "@/lib/auth-client";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, User } from "lucide-react"; // 🔄 ADDED: User icon
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CartDrawer } from "./cart-drawer";
@@ -46,12 +46,7 @@ export function SiteHeader() {
           >
             Cart
           </Link>
-          <Link
-            href="/checkout"
-            className="text-muted-foreground hover:text-foreground"
-          >
-            checkout
-          </Link>
+          {/* 🔄 REMOVED: The /checkout link from the main nav, as it's accessed via the cart */}
         </nav>
 
         {/* Actions */}
@@ -73,9 +68,15 @@ export function SiteHeader() {
             <span className="text-sm text-muted-foreground">…</span>
           ) : session ? (
             <>
-              <span className="hidden text-sm text-muted-foreground sm:inline">
-                {session.user.name ?? session.user.email}
-              </span>
+              {/* 🔄 CHANGED: Replaced the text name with a clean Account link */}
+              <Button
+                variant="ghost"
+                size="sm"
+                render={<Link href="/account/orders" />}
+              >
+                <User className="size-4 mr-2" />
+                <span className="hidden sm:inline">Account</span>
+              </Button>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 Sign out
               </Button>
