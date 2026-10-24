@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -11,12 +11,8 @@ export function SearchInput() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  // 🔄 CHANGED: No useEffect. Initialize state from URL exactly once on mount.
   const [query, setQuery] = useState(searchParams.get("search") || "");
-
-// Sync local state if URL changes externally (e.g., clearing filters)
-  useEffect(() => {
-    setQuery(searchParams.get("search") || "");
-  }, [searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +24,6 @@ export function SearchInput() {
       params.delete("search");
     }
 
-    // Keep the category filter if it exists
     router.push(`${pathname}?${params.toString()}`);
   };
 

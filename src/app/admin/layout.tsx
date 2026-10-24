@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { LayoutDashboard, Package, ShoppingCart } from "lucide-react";
+import { FolderTree, LayoutDashboard, Package, ShoppingCart } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -40,6 +40,14 @@ export default async function AdminLayout({
             className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted"
           >
             <Package className="size-4" /> Products
+          </Link>
+
+          {/* 🔄 NEW: Categories Link */}
+          <Link
+            href="/admin/categories"
+            className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted"
+          >
+            <FolderTree className="size-4" /> Categories
           </Link>
         </nav>
       </aside>
