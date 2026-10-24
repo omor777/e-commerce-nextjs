@@ -8,6 +8,8 @@ import { ShoppingCart, User } from "lucide-react"; // 🔄 ADDED: User icon
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CartDrawer } from "./cart-drawer";
+import { Suspense } from "react";
+import { SearchInput } from "./search-input";
 
 export function SiteHeader() {
   const router = useRouter();
@@ -31,6 +33,13 @@ export function SiteHeader() {
         <Link href="/" className="text-lg font-semibold">
           Store
         </Link>
+
+        {/* 🔄 NEW: Search Bar */}
+        <div className="hidden md:flex flex-1 justify-center">
+          <Suspense fallback={null}>
+            <SearchInput />
+          </Suspense>
+        </div>
 
         {/* Nav links */}
         <nav className="hidden items-center gap-6 text-sm md:flex">

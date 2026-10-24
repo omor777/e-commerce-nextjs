@@ -70,3 +70,59 @@ export async function getAdminProductById(id: string) {
 export type AdminProductFormValues = Awaited<
   ReturnType<typeof getAdminProductById>
 >;
+
+/**
+ * Fetches all active categories for the sidebar navigation.
+ */
+export async function getActiveCategories() {
+  return prisma.category.findMany({
+    where: { isActive: true },
+    select: { id: true, name: true, slug: true },
+    orderBy: { name: "asc" },
+  });
+}
+
+/**
+ * Fetches products for the storefront, optionally filtered by category.
+ * If a categorySlug is provided, it only returns products in that category.
+ */
+export async function getStorefrontProducts(
+  categorySlug?: string,
+  searchQuery?: string,
+) {
+  const where = {
+    isActive: true,
+    ...(categorySlug ? { category: { slug: categorySlug } } : {}),
+    // 🔄 NEW: Add search filter
+    ...(searchQuery
+      ? { name: { contains: searchQuery, mode: "insensitive" as const } }
+      : {}),
+  };
+
+  const products = await prisma.product.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    include: {
+      category: { select: { name: true } },
+      variants: {
+        where: { isActive: true },
+        select: { price: true },
+        orderBy: { price: "asc" },
+        take: 1,
+      },
+    },
+  });
+
+  return products.map((product) => ({
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    images: product.images,
+    categoryName: product.category?.name || null,
+    cheapestPrice: product.variants[0]?.price?.toString() || null,
+  }));
+}
+
+export type StorefrontProduct = Awaited<
+  ReturnType<typeof getStorefrontProducts>
+>[number];

@@ -6,11 +6,9 @@ export type ProductListItem = {
   name: string;
   slug: string;
   images: string[];
-  isActive: boolean;
-  category: { id: string; name: string; slug: string } | null;
-  cheapestPrice: string | null; // 👈 Matches your current API
-  createdAt: string;
-  updatedAt: string;
+  categoryName: string | null; // 👈 This is the fix
+  cheapestPrice: string | null;
+  
 };
 
 export type ProductListResponse = {

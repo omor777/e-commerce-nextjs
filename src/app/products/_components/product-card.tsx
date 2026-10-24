@@ -10,18 +10,15 @@ import Link from "next/link";
 import { useState } from "react";
 import { VariantPickerModal } from "./variant-picker-modal";
 
-// ─── NEW ───────────────────────────────────────────
-// Extracted component props at the top
 type ProductCardProps = {
+  // 🔄 CHANGED: Use ProductListItem which should match StorefrontProduct
   product: ProductListItem;
 };
-// ───────────────────────────────────────────────────
 
 export function ProductCard({ product }: ProductCardProps) {
   const [wishlisted, setWishlisted] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const image = product.images?.[0] ?? "/placeholder.svg";
-  // console.log(product);
 
   return (
     <>
@@ -64,16 +61,16 @@ export function ProductCard({ product }: ProductCardProps) {
                 {product.name}
               </h3>
             </Link>
-            {product.category && (
+            {/* 🔄 CHANGED: Use categoryName from our updated query */}
+            {product.categoryName && (
               <p className="text-sm text-muted-foreground">
-                {product.category.name}
+                {product.categoryName}
               </p>
             )}
           </div>
 
           <div className="mt-auto flex items-center justify-between gap-2">
             <span className="font-medium">
-              {/* 🔄 CHANGED: back to cheapestPrice */}
               {product.cheapestPrice !== null
                 ? `${formatPrice(product.cheapestPrice)}`
                 : "Unavailable"}
@@ -83,7 +80,6 @@ export function ProductCard({ product }: ProductCardProps) {
               size="sm"
               variant="outline"
               className="gap-1.5"
-              // 🔄 CHANGED: Open modal instead of direct add
               disabled={product.cheapestPrice === null}
               onClick={() => setModalOpen(true)}
             >
